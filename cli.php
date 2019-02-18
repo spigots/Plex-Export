@@ -7,9 +7,9 @@
 	A CLI script to export information from your Plex library.
 	Usage:
 		php cli.php [-plex-url="http://your-plex-library:32400"] [-data-dir="plex-data"] [-sections=1,2,3 or "Movies,TV Shows"] [-token=TheTokenToUse]
-		
+
 	Dane22, a Plex Community member added support for Plex Tokens
-	
+
 	Token: To get a valid token, look here: https://support.plex.tv/hc/en-us/articles/204059436-Finding-your-account-token-X-Plex-Token
 
 */
@@ -35,13 +35,13 @@ error_reporting(E_ALL ^ E_NOTICE | E_WARNING);
 	if(substr($options['plex-url'],-1)!='/') $options['plex-url'] .= '/'; // Always have a trailing slash
 	$options['absolute-data-dir'] = dirname(__FILE__).'/'.$options['data-dir']; // Run in current dir (PHP CLI defect)
 	$options['sort-skip-words'] = (array) explode(',', $options['sort-skip-words']); # comma separated list of words to skip for sorting titles
-	
+
 	// Create the http header with a X-Plex-Token in it	if specified
-	
+
 	if (strlen($options['token']) == 0){
 		$headers = array(
 			'http'=>array(
-    	'method'=>"GET"                 
+    	'method'=>"GET"
 			)
 		);
 	}
@@ -50,13 +50,13 @@ error_reporting(E_ALL ^ E_NOTICE | E_WARNING);
 		$headers = array(
 		'http'=>array(
 		  'method'=>"GET",
-		  'header'=>"X-Plex-Token: ".$options['token']              
+		  'header'=>"X-Plex-Token: ".$options['token']
 			)
 		);
 	}
 
 	$context = stream_context_create($headers);
-	
+
 	check_dependancies(); // Check everything is enabled as necessary
 
 
@@ -79,22 +79,22 @@ error_reporting(E_ALL ^ E_NOTICE | E_WARNING);
 		$section_titles = array();
 		foreach($all_sections as $i=>$section) $section_titles[strtolower($section['title'])] = $i;
 		foreach($sections_to_show as $section_key_or_title) {
-			
+
 			$section_title = strtolower(trim($section_key_or_title));
 			if(array_key_exists($section_title, $section_titles)) {
 				$section_id = $section_titles[$section_title];
 				$sections[$section_id] = $all_sections[$section_id];
 				continue;
 			}
-			
+
 			$section_id = intval($section_key_or_title);
 			if(array_key_exists($section_id, $all_sections)) {
 				$sections[$section_id] = $all_sections[$section_id];
 				continue;
 			}
-			
+
 			plex_error('Could not find section: '.$section_key_or_title);
-			
+
 		} // end foreach: $sections_to_show
 	} // end if: !all sections
 
@@ -121,14 +121,14 @@ error_reporting(E_ALL ^ E_NOTICE | E_WARNING);
 			$sections[$i]['items'] = array();
 			continue;
 		}
-		
+
 		$num_items = count($items);
 		if($section['type']=='show') {
 			$num_items_episodes = 0;
 			foreach($items as $item) $num_items_episodes += $item['num_episodes'];
 			$total_items += $num_items_episodes;
 		} else {
-			$total_items += $num_items;	
+			$total_items += $num_items;
 		}
 
 		plex_log('Analysing media items in section...');
@@ -137,7 +137,7 @@ error_reporting(E_ALL ^ E_NOTICE | E_WARNING);
 		$raw_section_genres = array();
 
 		foreach($items as $key=>$item) {
-			
+
 			$title_sort = strtolower($item['title']);
 			$title_first_space = strpos($title_sort, ' ');
 			if($title_first_space>0) {
@@ -180,7 +180,7 @@ error_reporting(E_ALL ^ E_NOTICE | E_WARNING);
 				);
 			}
 		}
-		
+
 		$section_display_order[] = $i;
 		$sections[$i]['num_items'] = $num_items;
 		$sections[$i]['items'] = $items;
@@ -366,14 +366,14 @@ function load_data_for_show($el) {
 	$genres = array();
 	foreach($el->Genre as $genre) $genres[] = strval($genre->attributes()->tag);
 	if(count($genres)>0) $item['genre'] = $genres;
-	
+
 	$url = $options['plex-url'].'library/metadata/'.$key.'/children';
 	$xml = load_xml_from_url($url);
 	if(!$xml) {
 		plex_error('Could not load additional metadata for '.$title);
 		return $item;
 	}
-	
+
 	$seasons = array();
 	$season_sort_order = array();
 	foreach($xml->Directory as $el2) {
@@ -388,13 +388,13 @@ function load_data_for_show($el) {
 			'episodes' => array(),
 			'index' => intval($el2->attributes()->index)
 		);
-		
+
 		$url = $options['plex-url'].'library/metadata/'.$season_key.'/children';
 		$xml2 = load_xml_from_url($url);
 		if(!$xml2) {
 			plex_error('Could not load season data for '.$item['title'].' : '.$season['title']);
 		}
-		
+
 		$episode_sort_order = array();
 		foreach($xml2->Video as $el3) {
 			if($el3->attributes()->type!='episode') continue;
@@ -412,12 +412,12 @@ function load_data_for_show($el) {
 			$season['episodes'][$episode_key] = $episode;
 			$season['actual_episodes']++;
 		}
-		
+
 		ksort($episode_sort_order);
 		$season['episode_sort_order'] = array_values($episode_sort_order);
-		
+
 		$seasons[$season_key] = $season;
-	}	
+	}
 	ksort($season_sort_order);
 	$item['season_sort_order'] = array_values($season_sort_order);
 	$item['num_seasons'] = count($seasons);
@@ -532,9 +532,9 @@ function load_xml_from_url($url) {
 
 	global $options;
 	global $context;
-	
-	
-	
+
+
+
 
 	if(!@fopen($url, 'r', false, $context)) {
 		plex_error('The Plex library could not be found at '.$options['plex-url']);
@@ -578,8 +578,9 @@ function generate_item_thumbnail($thumb_url, $key, $title) {
 		return false;
 	}
 
-	$source_url = $options['plex-url'].substr($thumb_url,1); # e.g. http://local:32400/library/metadata/123/thumb?=date
-	$transcode_url = $options['plex-url'].'photo/:/transcode?width='.$options['thumbnail-width'].'&height='.$options['thumbnail-height'].'&url='.urlencode($source_url);
+	$source_url = '/'.substr($thumb_url,1); # e.g. http://local:32400/library/metadata/123/thumb?=date
+	$source_url = $source_url . '&X-Plex-Token='.$options['token'];
+	$transcode_url = $options['plex-url'].'photo/:/transcode?width='.$options['thumbnail-width'].'&height='.$options['thumbnail-height'].'&url='.urlencode($source_url).'&X-Plex-Token='.$options['token'];
 
 	$img_data = @file_get_contents($transcode_url, false, $context);
 	if(!$img_data) {
@@ -712,19 +713,19 @@ function hl_inflect($num, $single, $plural=false) {
 
 
 
-/* 
+/*
  * This is the php version of the Dean Edwards JavaScript's Packer,
  * Based on :
- * 
+ *
  * ParseMaster, version 1.0.2 (2005-08-19) Copyright 2005, Dean Edwards
  * a multi-pattern parser.
  * KNOWN BUG: erroneous behavior when using escapeChar with a replacement
  * value that is a function
- * 
+ *
  * packer, version 2.0.2 (2005-08-19) Copyright 2004-2005, Dean Edwards
- * 
+ *
  * License: http://creativecommons.org/licenses/LGPL/2.1/
- * 
+ *
  * Ported to PHP by Nicolas Martin.
  */
 class JavaScriptPacker {
@@ -736,35 +737,35 @@ class JavaScriptPacker {
 	private $_encoding = 62;
 	private $_fastDecode = true;
 	private $_specialChars = false;
-	
+
 	private $LITERAL_ENCODING = array(
 		'None' => 0,
 		'Numeric' => 10,
 		'Normal' => 62,
 		'High ASCII' => 95
 	);
-	
+
 	public function __construct($_script, $_encoding = 62, $_fastDecode = true, $_specialChars = false)
 	{
 		$this->_script = $_script . "\n";
 		if (array_key_exists($_encoding, $this->LITERAL_ENCODING))
 			$_encoding = $this->LITERAL_ENCODING[$_encoding];
 		$this->_encoding = min((int)$_encoding, 95);
-		$this->_fastDecode = $_fastDecode;	
+		$this->_fastDecode = $_fastDecode;
 		$this->_specialChars = $_specialChars;
 	}
-	
+
 	public function pack() {
 		$this->_addParser('_basicCompression');
 		if ($this->_specialChars)
 			$this->_addParser('_encodeSpecialChars');
 		if ($this->_encoding)
 			$this->_addParser('_encodeKeywords');
-		
+
 		// go!
 		return $this->_pack($this->_script);
 	}
-	
+
 	// apply all parsing routines
 	private function _pack($script) {
 		for ($i = 0; isset($this->_parsers[$i]); $i++) {
@@ -772,13 +773,13 @@ class JavaScriptPacker {
 		}
 		return $script;
 	}
-	
+
 	// keep a list of parsing functions, they'll be executed all at once
 	private $_parsers = array();
 	private function _addParser($parser) {
 		$this->_parsers[] = $parser;
 	}
-	
+
 	// zero encoding - just removal of white space and comments
 	private function _basicCompression($script) {
 		$parser = new ParseMaster();
@@ -808,7 +809,7 @@ class JavaScriptPacker {
 		// done
 		return $parser->exec($script);
 	}
-	
+
 	private function _encodeSpecialChars($script) {
 		$parser = new ParseMaster();
 		// replace: $name -> n, $$name -> na
@@ -821,7 +822,7 @@ class JavaScriptPacker {
 		$keywords = $this->_analyze($script, $regexp, '_encodePrivate');
 		// quick ref
 		$encoded = $keywords['encoded'];
-		
+
 		$parser->add($regexp,
 			array(
 				'fn' => '_replace_encoded',
@@ -830,7 +831,7 @@ class JavaScriptPacker {
 		);
 		return $parser->exec($script);
 	}
-	
+
 	private function _encodeKeywords($script) {
 		// escape high-ascii values already in the script (i.e. in strings)
 		if ($this->_encoding > 62)
@@ -843,7 +844,7 @@ class JavaScriptPacker {
 		// build the word list
 		$keywords = $this->_analyze($script, $regexp, $encode);
 		$encoded = $keywords['encoded'];
-		
+
 		// encode
 		$parser->add($regexp,
 			array(
@@ -859,7 +860,7 @@ class JavaScriptPacker {
 			return $this->_bootStrap($parser->exec($script), $keywords);
 		}
 	}
-	
+
 	private function _analyze($script, $regexp, $encode) {
 		// analyse
 		// retreive all words in the script
@@ -906,7 +907,7 @@ class JavaScriptPacker {
 					$this->_count[$word] = 0;
 				}
 			} while ($i);
-			
+
 			// sort the words by frequency
 			// Note: the javascript and php version of sort can be different :
 			// in php manual, usort :
@@ -916,7 +917,7 @@ class JavaScriptPacker {
 			// but equivalent.
 			// the ECMAscript standard does not guarantee this behaviour,
 			// and thus not all browsers (e.g. Mozilla versions dating back to at
-			// least 2003) respect this. 
+			// least 2003) respect this.
 			usort($unsorted, array(&$this, '_sortWords'));
 			$j = 0;
 			// because there are "protected" words in the list
@@ -932,12 +933,12 @@ class JavaScriptPacker {
 			'encoded' => $_encoded,
 			'protected' => $_protected);
 	}
-	
+
 	private $_count = array();
 	private function _sortWords($match1, $match2) {
 		return $this->_count[$match2] - $this->_count[$match1];
 	}
-	
+
 	// build the boot function used for loading and decoding
 	private function _bootStrap($packed, $keywords) {
 		$ENCODE = $this->_safeRegExp('$encode\\($count\\)');
@@ -1004,7 +1005,7 @@ class JavaScriptPacker {
 		// pack the boot function too
 		$unpackPacker = new JavaScriptPacker($unpack, 0, false, true);
 		$unpack = $unpackPacker->pack();
-		
+
 		// arguments
 		$params = array($packed, $ascii, $count, $keywords);
 		if ($this->_fastDecode) {
@@ -1012,11 +1013,11 @@ class JavaScriptPacker {
 			$params[] = '{}';
 		}
 		$params = implode(',', $params);
-		
+
 		// the whole thing
 		return 'eval(' . $unpack . '(' . $params . "))\n";
 	}
-	
+
 	private $buffer;
 	private function _insertFastDecode($match) {
 		return '{' . $this->buffer . ';';
@@ -1024,25 +1025,25 @@ class JavaScriptPacker {
 	private function _insertFastEncode($match) {
 		return '{$encode=' . $this->buffer . ';';
 	}
-	
+
 	// mmm.. ..which one do i need ??
 	private function _getEncoder($ascii) {
 		return $ascii > 10 ? $ascii > 36 ? $ascii > 62 ?
 		       '_encode95' : '_encode62' : '_encode36' : '_encode10';
 	}
-	
+
 	// zero encoding
 	// characters: 0123456789
 	private function _encode10($charCode) {
 		return $charCode;
 	}
-	
+
 	// inherent base36 support
 	// characters: 0123456789abcdefghijklmnopqrstuvwxyz
 	private function _encode36($charCode) {
 		return base_convert($charCode, 10, 36);
 	}
-	
+
 	// hitch a ride on base36 and add the upper case alpha characters
 	// characters: 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
 	private function _encode62($charCode) {
@@ -1051,36 +1052,36 @@ class JavaScriptPacker {
 			$res = $this->_encode62((int)($charCode / $this->_encoding));
 		}
 		$charCode = $charCode % $this->_encoding;
-		
+
 		if ($charCode > 35)
 			return $res . chr($charCode + 29);
 		else
 			return $res . base_convert($charCode, 10, 36);
 	}
-	
+
 	// use high-ascii values
 	// characters: ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþ
 	private function _encode95($charCode) {
 		$res = '';
 		if ($charCode >= $this->_encoding)
 			$res = $this->_encode95($charCode / $this->_encoding);
-		
+
 		return $res . chr(($charCode % $this->_encoding) + 161);
 	}
-	
+
 	private function _safeRegExp($string) {
 		return '/'.preg_replace('/\$/', '\\\$', $string).'/';
 	}
-	
+
 	private function _encodePrivate($charCode) {
 		return "_" . $charCode;
 	}
-	
+
 	// protect characters used by the parser
 	private function _escape($script) {
 		return preg_replace('/([\\\\\'])/', '\\\$1', $script);
 	}
-	
+
 	// protect high-ascii characters already in the script
 	private function _escape95($script) {
 		return preg_replace_callback(
@@ -1092,15 +1093,15 @@ class JavaScriptPacker {
 	private function _escape95Bis($match) {
 		return '\x'.((string)dechex(ord($match)));
 	}
-	
-	
+
+
 	private function _getJSFunction($aName) {
 		if (defined('self::JSFUNCTION'.$aName))
 			return constant('self::JSFUNCTION'.$aName);
-		else 
+		else
 			return '';
 	}
-	
+
 	// JavaScript Functions used.
 	// Note : In Dean's version, these functions are converted
 	// with 'String(aFunctionName);'.
@@ -1108,7 +1109,7 @@ class JavaScriptPacker {
 	// 'while (aBool) anAction();' is converted to
 	// 'while (aBool) { anAction(); }'.
 	// The JavaScript functions below are corrected.
-	
+
 	// unpacking function - this is the boot strap function
 	//  data extracted from this packing routine is passed to
 	//  this function when decoded in the target
@@ -1131,7 +1132,7 @@ class JavaScriptPacker {
     return $packed;
 }';
 */
-	
+
 	// code-snippet inserted into the unpacker to speed up decoding
 	const JSFUNCTION_decodeBody =
 //_decode = function() {
@@ -1164,21 +1165,21 @@ class JavaScriptPacker {
         $count = 1;
     }';
 */
-	
+
 	 // zero encoding
 	 // characters: 0123456789
 	 const JSFUNCTION_encode10 =
 'function($charCode) {
     return $charCode;
 }';//;';
-	
+
 	 // inherent base36 support
 	 // characters: 0123456789abcdefghijklmnopqrstuvwxyz
 	 const JSFUNCTION_encode36 =
 'function($charCode) {
     return $charCode.toString(36);
 }';//;';
-	
+
 	// hitch a ride on base36 and add the upper case alpha characters
 	// characters: 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
 	const JSFUNCTION_encode62 =
@@ -1186,27 +1187,27 @@ class JavaScriptPacker {
     return ($charCode < _encoding ? \'\' : arguments.callee(parseInt($charCode / _encoding))) +
     (($charCode = $charCode % _encoding) > 35 ? String.fromCharCode($charCode + 29) : $charCode.toString(36));
 }';
-	
+
 	// use high-ascii values
 	// characters: ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþ
 	const JSFUNCTION_encode95 =
 'function($charCode) {
     return ($charCode < _encoding ? \'\' : arguments.callee($charCode / _encoding)) +
         String.fromCharCode($charCode % _encoding + 161);
-}'; 
-	
+}';
+
 }
 
 
 class ParseMaster {
 	public $ignoreCase = false;
 	public $escapeChar = '';
-	
+
 	// constants
 	const EXPRESSION = 0;
 	const REPLACEMENT = 1;
 	const LENGTH = 2;
-	
+
 	// used to determine nesting levels
 	private $GROUPS = '/\\(/';//g
 	private $SUB_REPLACE = '/\\$\\d/';
@@ -1215,12 +1216,12 @@ class ParseMaster {
 	private $ESCAPE = '/\\\./';//g
 	private $QUOTE = '/\'/';
 	private $DELETED = '/\\x01[^\\x01]*\\x01/';//g
-	
+
 	public function add($expression, $replacement = '') {
 		// count the number of sub-expressions
 		//  - add one because each pattern is itself a sub-expression
 		$length = 1 + preg_match_all($this->GROUPS, $this->_internalEscape((string)$expression), $out);
-		
+
 		// treat only strings $replacement
 		if (is_string($replacement)) {
 			// does the pattern deal with sub-expressions?
@@ -1248,11 +1249,11 @@ class ParseMaster {
 		if (!empty($expression)) $this->_add($expression, $replacement, $length);
 		else $this->_add('/^$/', $replacement, $length);
 	}
-	
+
 	public function exec($string) {
 		// execute the global replacement
 		$this->_escaped = array();
-		
+
 		// simulate the _patterns.toSTring of Dean
 		$regexp = '/';
 		foreach ($this->_patterns as $reg) {
@@ -1260,7 +1261,7 @@ class ParseMaster {
 		}
 		$regexp = substr($regexp, 0, -1) . '/';
 		$regexp .= ($this->ignoreCase) ? 'i' : '';
-		
+
 		$string = $this->_escape($string, $this->escapeChar);
 		$string = preg_replace_callback(
 			$regexp,
@@ -1271,10 +1272,10 @@ class ParseMaster {
 			$string
 		);
 		$string = $this->_unescape($string, $this->escapeChar);
-		
+
 		return preg_replace($this->DELETED, '', $string);
 	}
-		
+
 	public function reset() {
 		// clear the patterns collection so that this object may be re-used
 		$this->_patterns = array();
@@ -1283,17 +1284,17 @@ class ParseMaster {
 	// private
 	private $_escaped = array();  // escaped characters
 	private $_patterns = array(); // patterns stored by index
-	
+
 	// create and add a new pattern to the patterns collection
 	private function _add() {
 		$arguments = func_get_args();
 		$this->_patterns[] = $arguments;
 	}
-	
+
 	// this is the global replace function (it's quite complicated)
 	private function _replacement($arguments) {
 		if (empty($arguments)) return '';
-		
+
 		$i = 1; $j = 0;
 		// loop through the patterns
 		while (isset($this->_patterns[$j])) {
@@ -1301,28 +1302,28 @@ class ParseMaster {
 			// do we have a result?
 			if (isset($arguments[$i]) && ($arguments[$i] != '')) {
 				$replacement = $pattern[self::REPLACEMENT];
-				
+
 				if (is_array($replacement) && isset($replacement['fn'])) {
-					
+
 					if (isset($replacement['data'])) $this->buffer = $replacement['data'];
 					return call_user_func(array(&$this, $replacement['fn']), $arguments, $i);
-					
+
 				} elseif (is_int($replacement)) {
 					return $arguments[$replacement + $i];
-				
+
 				}
 				$delete = ($this->escapeChar == '' ||
 				           strpos($arguments[$i], $this->escapeChar) === false)
 				        ? '' : "\x01" . $arguments[$i] . "\x01";
 				return $delete . $replacement;
-			
+
 			// skip over references to sub-expressions
 			} else {
 				$i += $pattern[self::LENGTH];
 			}
 		}
 	}
-	
+
 	private function _backReferences($match, $offset) {
 		$replacement = $this->buffer['replacement'];
 		$quote = $this->buffer['quote'];
@@ -1332,22 +1333,22 @@ class ParseMaster {
 		}
 		return $replacement;
 	}
-	
+
 	private function _replace_name($match, $offset){
 		$length = strlen($match[$offset + 2]);
 		$start = $length - max($length - strlen($match[$offset + 3]), 0);
 		return substr($match[$offset + 1], $start, $length) . $match[$offset + 4];
 	}
-	
+
 	private function _replace_encoded($match, $offset) {
 		return $this->buffer[$match[$offset]];
 	}
-	
-	
+
+
 	// php : we cannot pass additional data to preg_replace_callback,
 	// and we cannot use &$this in create_function, so let's go to lower level
 	private $buffer;
-	
+
 	// encode escaped characters
 	private function _escape($string, $escapeChar) {
 		if ($escapeChar) {
@@ -1357,7 +1358,7 @@ class ParseMaster {
 				array(&$this, '_escapeBis'),
 				$string
 			);
-			
+
 		} else {
 			return $string;
 		}
@@ -1366,7 +1367,7 @@ class ParseMaster {
 		$this->_escaped[] = $match[1];
 		return $this->buffer;
 	}
-	
+
 	// decode escaped characters
 	private function _unescape($string, $escapeChar) {
 		if ($escapeChar) {
@@ -1378,7 +1379,7 @@ class ParseMaster {
 				array(&$this, '_unescapeBis'),
 				$string
 			);
-			
+
 		} else {
 			return $string;
 		}
@@ -1394,7 +1395,7 @@ class ParseMaster {
 		$this->buffer['i']++;
 		return $this->buffer['escapeChar'] . $temp;
 	}
-	
+
 	private function _internalEscape($string) {
 		return preg_replace($this->ESCAPE, '', $string);
 	}
